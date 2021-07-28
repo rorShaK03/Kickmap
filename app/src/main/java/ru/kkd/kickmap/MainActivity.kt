@@ -17,6 +17,7 @@ class MainActivity : AppCompatActivity() {
         mapFragment?.getMapAsync{
             addMarkers(it)
         }
+        Places.initialize()
     }
     fun addMarkers(map: GoogleMap) {
 
