@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.PolylineOptions
 import com.google.maps.android.clustering.ClusterManager
 
 class MapReadyCallback(
@@ -20,6 +21,8 @@ class MapReadyCallback(
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
             gm.isMyLocationEnabled = true
         addMarkers(gm)
+        val list = PlaceList().list
+        Routes(context, gm).getPathFromAPI(list[0], list[1])
     }
 
     fun addMarkers(map: GoogleMap) {
