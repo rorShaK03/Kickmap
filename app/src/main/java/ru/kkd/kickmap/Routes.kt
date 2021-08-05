@@ -16,8 +16,6 @@ import javax.net.ssl.HttpsURLConnection
 
 class Routes(val context : Context, val gm : GoogleMap) {
     val POLYLINE_WIDTH : Float = 10f
-    val LINE_BLUE = "line_blue"
-    val ENCODED_POINTS = "encoded_points"
     var string_path : String? = null
     fun drawAllPolylines()
     {
@@ -28,29 +26,38 @@ class Routes(val context : Context, val gm : GoogleMap) {
     fun readFromString(str: String) : MutableList<LatLng>
     {
         var latLngList = mutableListOf<LatLng>()
-        latLngList.addAll(PolyUtil.decode(str.trim().replace("\\\\", "\\")))
+        latLngList.addAll(PolyUtil.decode(str.trim()))
         return latLngList
     }
 
-    inner class rnbl(val start : Place, val end : Place) : Runnable
+    inner class rnbl(val start : Place, val end : Place, val waypoints: List<Place>) : Runnable
     {
        public override fun run()
        {
-           getHttps(start, end)
+           getHttps(start, end, waypoints)
        }
     }
 
-    fun getPathFromAPI(start : Place, end : Place)
+    fun getPathFromAPI(start : Place, end : Place, waypoints: List<Place>)
     {
-        var thread = Thread(rnbl(start, end))
+        var thread = Thread(rnbl(start, end, waypoints))
         thread.start()
         thread.join()
         drawAllPolylines()
     }
 
-    fun getHttps(start : Place, end : Place)
+    fun getHttps(start : Place, end : Place, waypoints : List<Place>)
     {
-        val request = "https://maps.googleapis.com/maps/api/directions/json?origin=${start.latLng.latitude},${start.latLng.longitude}&destination=${end.latLng.latitude},${end.latLng.longitude}&key=${BuildConfig.MAPS_API_KEY}"
+        var request = "https://maps.googleapis.com/maps/api/directions/json?origin=${start.latLng.latitude},${start.latLng.longitude}&" +
+                "destination=${end.latLng.latitude},${end.latLng.longitude}&mode=walking&key=${BuildConfig.MAPS_API_KEY}"
+        if(waypoints.size > 0) {
+            request += "&waypoints="
+            for (i in 0 until waypoints.size) {
+                request += "${waypoints[i].latLng.latitude},${waypoints[i].latLng.longitude}"
+                if(i < waypoints.size - 1)
+                    request += "|"
+            }
+        }
         var url = URL(request)
         var conn = url.openConnection() as HttpsURLConnection
         conn.connectTimeout = 3000
